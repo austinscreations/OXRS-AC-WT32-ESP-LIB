@@ -1,0 +1,27 @@
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+OXRS_WT32	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+initialiseSerial		KEYWORD2
+begin		KEYWORD2
+loop		KEYWORD2
+restartApi		KEYWORD2
+setConfigSchema		KEYWORD2
+setcommandSchema		KEYWORD2
+publishStatus		KEYWORD2
+publishTelemetry		KEYWORD2
+getIPAddressTxt		KEYWORD2
+getMACAddressTxt		KEYWORD2
+getMQTTTopicTxt		KEYWORD2
+getConnectionState		KEYWORD2
+write		KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
