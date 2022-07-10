@@ -1,10 +1,12 @@
-# OXRS-AC-SENSORS-ESP-LIB
-Library for interfacing QWIIC I2C sensors into OXRS firmware devices
+# OXRS-AC-WT32-ESP-LIB
+Library for interfacing WT32-SC01 touch screen into OXRS
 
-Currently supports:
-128x32 OLED, PCF8523 RTC, SHT40 hum&temp, MCP9808 temp, BH1750 LUX (with default i2c addresses)
+## Currently supports:
+Project: https://github.com/austinscreations/WT32-SC01_POE <br>
+Firmware: https://github.com/austinscreations/OXRS-AC-TP32-ESP-FW <br>
+A library: https://github.com/austinscreations/OXRS-AC-I2CSensors-ESP-LIB
 
-Dependencies:
+## Dependencies:
 ``` c++
 #include <OXRS_MQTT.h>                // For MQTT     - https://github.com/OXRS-IO/OXRS-IO-MQTT-ESP32-LIB
 #include <OXRS_API.h>                 // For REST API - https://github.com/OXRS-IO/OXRS-IO-API-ESP32-LIB
@@ -31,12 +33,11 @@ Dependencies:
 #endif
 ```
 
-The core of OXRS_SENSORS:
+## The core of OXRS_WT32:
 ```c++
 #include <OXRS_WT32.h>                // WT32 support
 
 // initialize the library instance
-// the only variable that may change is mqtt should you change the OXRS_MQTT initializer
 OXRS_WT32 wt32;
 
 // To start your code you'll likely start with serial debugging - this line can initilaize serial and print out the firmware env information in your platformIO config
@@ -59,7 +60,7 @@ wt32.setCommandSchema(properties);
 wt32.getConnectionState();
 ```
 
-For your platformIO INI file you'll have options for using the sensors, setting wifi or ethernet mode, or the serial baud rate
+## For your platformIO INI file you'll have options for using the sensors, setting wifi or ethernet mode, or the serial baud rate
 
 ```ini
 build_flags =
