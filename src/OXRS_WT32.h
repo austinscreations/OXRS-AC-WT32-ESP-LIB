@@ -44,7 +44,7 @@ public:
   boolean publishStatus(JsonVariant json);
   boolean publishTelemetry(JsonVariant json);
 
-  // Helpers used to display the connection state on the settings page
+  // Helpers for retrieving the connection status and properties
   connectionState_t getConnectionState(void);
   void getIPAddressTxt(char *buffer);
   void getMACAddressTxt(char *buffer);
