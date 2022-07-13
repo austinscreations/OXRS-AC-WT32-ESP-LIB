@@ -8,27 +8,23 @@ A library: https://github.com/austinscreations/OXRS-AC-I2CSensors-ESP-LIB
 
 ## Dependencies:
 ``` c++
-#include <OXRS_MQTT.h>                // For MQTT     - https://github.com/OXRS-IO/OXRS-IO-MQTT-ESP32-LIB
-#include <OXRS_API.h>                 // For REST API - https://github.com/OXRS-IO/OXRS-IO-API-ESP32-LIB
-#include <ArduinoJson.h>
-#include <MqttLogger.h>               // For logging  - androbi/MqttLogger
+#include <OXRS_MQTT.h>                // For MQTT       - https://github.com/OXRS-IO/OXRS-IO-MQTT-ESP32-LIB
+#include <OXRS_API.h>                 // For REST API   - https://github.com/OXRS-IO/OXRS-IO-API-ESP32-LIB
+#include <Ethernet.h>                 // For networking - https://github.com/OXRS-IO/Ethernet
+#include <WiFi.h>                     // Required for Ethernet to get MAC
+#include <MqttLogger.h>               // For logging    - androbi/MqttLogger
 
-#if defined(ETHMODE)
-#include <Ethernet.h>                 // for ethernet - https://github.com/OXRS-IO/Ethernet
-#endif
-
-#if defined(WIFIMODE)
+#if defined(WIFI_MODE)
 #include <WiFiManager.h>              // For WiFi AP config - https://github.com/tzapu/wifiManager
-#include <WiFi.h>                     // for wifi
 #endif
 
-#if defined(USESENSORS)
+#if defined(I2C_SENSORS)
 #include <Adafruit_MCP9808.h>         // For temp sensor
 #include <Adafruit_SSD1306.h>         // For OLED display
 #include <Adafruit_SHT4x.h>           // For SHT40 Temp / humidity sensor
 #include <RTClib.h>                   // For PCF8523 RTC
 #include <BH1750.h>                   // For BH1750 lux sensor - non-adafruit library: https://github.com/claws/BH1750
-#include <OXRS_SENSORS.h>             // For OXRS i2c sensors https://github.com/austinscreations/OXRS-AC-I2CSensors-ESP-LIB
+#include <OXRS_SENSORS.h>             // For OXRS I2C sensors https://github.com/austinscreations/OXRS-AC-I2CSensors-ESP-LIB
 #include <Wire.h>                     // For I2C 
 #endif
 ```
@@ -39,9 +35,6 @@ A library: https://github.com/austinscreations/OXRS-AC-I2CSensors-ESP-LIB
 
 // initialize the library instance
 OXRS_WT32 wt32;
-
-// To start your code you'll likely start with serial debugging - this line can initilaize serial and print out the firmware env information in your platformIO config
-wt32.initialiseSerial();
 
 // This starts the core of the library conencting to network (wifi or ethernet) and then starting the mqtt and api libaries
 wt32.begin();
@@ -60,20 +53,18 @@ wt32.setCommandSchema(properties);
 wt32.getConnectionState();
 ```
 
-## For your platformIO INI file you'll have options for using the sensors, setting wifi or ethernet mode, or the serial baud rate
+## For your platformIO INI file you'll have options for using the sensors or setting wifi/ethernet mode
 
 ```ini
 build_flags =
   ; -- firmware info
-	-DFW_NAME="${firmware.name}"
-	-DFW_SHORT_NAME="${firmware.short_name}"
-	-DFW_MAKER="${firmware.maker}"
-	; -DFW_GITHUB_URL="${firmware.github_url}" ; not required for oxrs but can be added if availble
+  -DFW_NAME="${firmware.name}"
+  -DFW_SHORT_NAME="${firmware.short_name}"
+  -DFW_MAKER="${firmware.maker}"
+  -DFW_GITHUB_URL="${firmware.github_url}"
 
   ; -- wt32 variables
-	-DSERIAL_BAUD_RATE=115200
-  -DUSESENSORS=1 ; activates the use of OXRS sensor library - ensure to declare the required libraries / dependacies
-
-  -DWIFIMODE=1 ; used when device will operate in wifi mode
-  -DETHMODE=1 ; used when device will operate in ethernet mode
+  -DI2C_SENSORS ; activates the OXRS sensor library - ensure to declare the required libraries / dependencies
+  -DWIFI_MODE ; used when device will operate in wifi mode
+  -DETH_MODE ; used when device will operate in ethernet mode
 ```
