@@ -356,6 +356,11 @@ void OXRS_WT32::loop(void)
     _api.loop(&client);
 #endif
   }
+
+  // Publish any sensor telemetry
+#if defined(I2C_SENSORS)
+  _sensors.tele();
+#endif
 }
 
 void OXRS_WT32::setConfigSchema(JsonVariant json)
