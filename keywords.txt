@@ -10,15 +10,15 @@ OXRS_WT32	KEYWORD1
 
 setMqttBroker		KEYWORD2
 setMqttClientId		KEYWORD2
-setMqttAuth			KEYWORD2
+setMqttAuth		KEYWORD2
 setMqttTopicPrefix	KEYWORD2
 setMqttTopicSuffix	KEYWORD2
 
 setConfigSchema		KEYWORD2
 setCommandSchema	KEYWORD2
 
-begin				KEYWORD2
-loop				KEYWORD2
+begin			KEYWORD2
+loop			KEYWORD2
 
 publishStatus		KEYWORD2
 publishTelemetry	KEYWORD2
