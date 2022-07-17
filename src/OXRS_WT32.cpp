@@ -527,7 +527,7 @@ void OXRS_WT32::_initialiseRestApi(void)
   // Register our callbacks
   _api.onAdopt(_apiAdopt);
   
-  _api.get("/snapshot", &_getApiSnapshot);
+  _api.get("/snapshot.bin", &_getApiSnapshot);
 
   // Start listening
   _server.begin();
