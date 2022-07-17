@@ -197,7 +197,7 @@ void _getApiSnapshot(Request &req, Response &res)
   snapshot = lv_snapshot_take(lv_scr_act(), LV_IMG_CF_TRUE_COLOR_ALPHA);
 
   uint8_t * bufferPtr = (uint8_t *)snapshot->data;
-  size_t bufferSize = SCREEN_WIDTH * SCREEN_HEIGHT * 3;
+  size_t bufferSize = WT32_SCREEN_WIDTH * WT32_SCREEN_HEIGHT * 3;
 
   // Convert to RGB888
   lv_color_t color;
