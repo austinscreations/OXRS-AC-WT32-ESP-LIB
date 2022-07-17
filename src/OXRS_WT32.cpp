@@ -51,6 +51,8 @@ DynamicJsonDocument _fwCommandSchema(2048);
 jsonCallback _onConfig;
 jsonCallback _onCommand;
 
+extern void makeSnapShot(uint8_t **bufferPtr, size_t *bufferSize);
+
 /* JSON helpers */
 void _mergeJson(JsonVariant dst, JsonVariantConst src)
 {
@@ -179,6 +181,17 @@ void _apiAdopt(JsonVariant json)
   _getNetworkJson(json);
   _getConfigSchemaJson(json);
   _getCommandSchemaJson(json);
+}
+
+void _getApiSnapshot(Request &req, Response &res)
+{
+  uint8_t *bufferPtr;
+  size_t bufferSize;
+  
+  makeSnapShot(&bufferPtr, &bufferSize);
+  
+  res.set("Content-Type", "application/octet-stream");
+  res.write(bufferPtr, bufferSize);
 }
 
 /* MQTT callbacks */
@@ -513,6 +526,8 @@ void OXRS_WT32::_initialiseRestApi(void)
   
   // Register our callbacks
   _api.onAdopt(_apiAdopt);
+  
+  _api.get("/snapshot", &_getApiSnapshot);
 
   // Start listening
   _server.begin();
