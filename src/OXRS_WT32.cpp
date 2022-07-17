@@ -188,6 +188,7 @@ void _getApiSnapshot(Request &req, Response &res)
   uint8_t *bufferPtr;
   size_t bufferSize;
   
+  // External function which needs to be implemented by the upstream firmware
   makeSnapShot(&bufferPtr, &bufferSize);
   
   res.set("Content-Type", "application/octet-stream");
@@ -527,6 +528,7 @@ void OXRS_WT32::_initialiseRestApi(void)
   // Register our callbacks
   _api.onAdopt(_apiAdopt);
   
+  // Custom endpoint for downloading a snapshot of the WT32 display
   _api.get("/snapshot.bin", &_getApiSnapshot);
 
   // Start listening
