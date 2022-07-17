@@ -19,6 +19,10 @@
 // REST API
 #define REST_API_PORT             80
 
+// Screen dimensions
+#define SCREEN_WIDTH              320
+#define SCREEN_HEIGHT             480
+
 // Enum for the different connection states
 enum connectionState_t { CONNECTED_NONE, CONNECTED_IP, CONNECTED_MQTT };
 

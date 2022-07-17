@@ -8,6 +8,7 @@
 #include <Ethernet.h>     // For networking
 #include <WiFi.h>         // Required for Ethernet to get MAC
 #include <MqttLogger.h>   // For logging
+#include <lvgl.h>         // For graphics
 
 #if defined(WIFI_MODE)
 #include <WiFiManager.h>  // For WiFi AP config
@@ -51,7 +52,8 @@ DynamicJsonDocument _fwCommandSchema(2048);
 jsonCallback _onConfig;
 jsonCallback _onCommand;
 
-extern void makeSnapShot(uint8_t **bufferPtr, size_t *bufferSize);
+// Snapshot API
+lv_img_dsc_t *snapshot = NULL;
 
 /* JSON helpers */
 void _mergeJson(JsonVariant dst, JsonVariantConst src)
@@ -185,12 +187,29 @@ void _apiAdopt(JsonVariant json)
 
 void _getApiSnapshot(Request &req, Response &res)
 {
-  uint8_t *bufferPtr;
-  size_t bufferSize;
+  // Clear any previous snapshot from memory
+  if (snapshot)
+  {
+    lv_snapshot_free(snapshot);
+  }
   
-  // External function which needs to be implemented by the upstream firmware
-  makeSnapShot(&bufferPtr, &bufferSize);
+  // Take a snapshot
+  snapshot = lv_snapshot_take(lv_scr_act(), LV_IMG_CF_TRUE_COLOR_ALPHA);
+
+  uint8_t * bufferPtr = (uint8_t *)snapshot->data;
+  size_t bufferSize = SCREEN_WIDTH * SCREEN_HEIGHT * 3;
+
+  // Convert to RGB888
+  lv_color_t color;
+  for (int i = 0; i < bufferSize; i += 3)
+  {
+    color.full = bufferPtr[i] + bufferPtr[i + 1] * 0x100;
+    bufferPtr[i] = (color.ch.red * 255) / 31;
+    bufferPtr[i + 1] = (color.ch.green * 255) / 63;
+    bufferPtr[i + 2] = (color.ch.blue * 255) / 31;
+  }
   
+  // Return the snapshot binary to the caller
   res.set("Content-Type", "application/octet-stream");
   res.write(bufferPtr, bufferSize);
 }
