@@ -8,10 +8,13 @@
 #include <Ethernet.h>     // For networking
 #include <WiFi.h>         // Required for Ethernet to get MAC
 #include <MqttLogger.h>   // For logging
-#include <lvgl.h>         // For graphics
 
 #if defined(WIFI_MODE)
 #include <WiFiManager.h>  // For WiFi AP config
+#endif
+
+#if defined(LV_USE_SNAPSHOT)
+#include <lvgl.h>         // For graphic snapshots
 #endif
 
 // Macro for converting env vars to strings
@@ -51,9 +54,6 @@ DynamicJsonDocument _fwCommandSchema(2048);
 // MQTT callbacks wrapped by _mqttConfig/_mqttCommand
 jsonCallback _onConfig;
 jsonCallback _onCommand;
-
-// Snapshot API
-lv_img_dsc_t *snapshot = NULL;
 
 /* JSON helpers */
 void _mergeJson(JsonVariant dst, JsonVariantConst src)
@@ -185,6 +185,10 @@ void _apiAdopt(JsonVariant json)
   _getCommandSchemaJson(json);
 }
 
+#if defined(LV_USE_SNAPSHOT)
+// Snapshot API
+lv_img_dsc_t *snapshot = NULL;
+
 void _getApiSnapshot(Request &req, Response &res)
 {
   // Clear any previous snapshot from memory
@@ -213,6 +217,7 @@ void _getApiSnapshot(Request &req, Response &res)
   res.set("Content-Type", "application/octet-stream");
   res.write(bufferPtr, bufferSize);
 }
+#endif
 
 /* MQTT callbacks */
 void _mqttConnected()
@@ -547,8 +552,10 @@ void OXRS_WT32::_initialiseRestApi(void)
   // Register our callbacks
   _api.onAdopt(_apiAdopt);
   
+#if defined(LV_USE_SNAPSHOT)
   // Custom endpoint for downloading a snapshot of the WT32 display
   _api.get("/snapshot.bin", &_getApiSnapshot);
+#endif
 
   // Start listening
   _server.begin();
