@@ -13,6 +13,10 @@
 #include <WiFiManager.h>  // For WiFi AP config
 #endif
 
+#if defined(LV_USE_SNAPSHOT)
+#include <lvgl.h>         // For graphic snapshots
+#endif
+
 // Macro for converting env vars to strings
 #define STRINGIFY(s) STRINGIFY1(s)
 #define STRINGIFY1(s) #s
@@ -180,6 +184,40 @@ void _apiAdopt(JsonVariant json)
   _getConfigSchemaJson(json);
   _getCommandSchemaJson(json);
 }
+
+#if defined(LV_USE_SNAPSHOT)
+// Snapshot API
+lv_img_dsc_t *snapshot = NULL;
+
+void _getApiSnapshot(Request &req, Response &res)
+{
+  // Clear any previous snapshot from memory
+  if (snapshot)
+  {
+    lv_snapshot_free(snapshot);
+  }
+  
+  // Take a snapshot
+  snapshot = lv_snapshot_take(lv_scr_act(), LV_IMG_CF_TRUE_COLOR_ALPHA);
+
+  uint8_t * bufferPtr = (uint8_t *)snapshot->data;
+  size_t bufferSize = WT32_SCREEN_WIDTH * WT32_SCREEN_HEIGHT * 3;
+
+  // Convert to RGB888
+  lv_color_t color;
+  for (int i = 0; i < bufferSize; i += 3)
+  {
+    color.full = bufferPtr[i] + bufferPtr[i + 1] * 0x100;
+    bufferPtr[i] = (color.ch.red * 255) / 31;
+    bufferPtr[i + 1] = (color.ch.green * 255) / 63;
+    bufferPtr[i + 2] = (color.ch.blue * 255) / 31;
+  }
+  
+  // Return the snapshot binary to the caller
+  res.set("Content-Type", "application/octet-stream");
+  res.write(bufferPtr, bufferSize);
+}
+#endif
 
 /* MQTT callbacks */
 void _mqttConnected()
@@ -513,6 +551,11 @@ void OXRS_WT32::_initialiseRestApi(void)
   
   // Register our callbacks
   _api.onAdopt(_apiAdopt);
+  
+#if defined(LV_USE_SNAPSHOT)
+  // Custom endpoint for downloading a snapshot of the WT32 display
+  _api.get("/snapshot.bin", &_getApiSnapshot);
+#endif
 
   // Start listening
   _server.begin();
