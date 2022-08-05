@@ -187,18 +187,10 @@ void _apiAdopt(JsonVariant json)
 
 #if defined(LV_USE_SNAPSHOT)
 // Snapshot API
-lv_img_dsc_t *snapshot = NULL;
-
 void _getApiSnapshot(Request &req, Response &res)
 {
-  // Clear any previous snapshot from memory
-  if (snapshot)
-  {
-    lv_snapshot_free(snapshot);
-  }
-  
   // Take a snapshot
-  snapshot = lv_snapshot_take(lv_scr_act(), LV_IMG_CF_TRUE_COLOR_ALPHA);
+  lv_img_dsc_t *snapshot = lv_snapshot_take(lv_scr_act(), LV_IMG_CF_TRUE_COLOR_ALPHA);
 
   uint8_t * bufferPtr = (uint8_t *)snapshot->data;
   size_t bufferSize = WT32_SCREEN_WIDTH * WT32_SCREEN_HEIGHT * 3;
@@ -208,14 +200,41 @@ void _getApiSnapshot(Request &req, Response &res)
   for (int i = 0; i < bufferSize; i += 3)
   {
     color.full = bufferPtr[i] + bufferPtr[i + 1] * 0x100;
-    bufferPtr[i] = (color.ch.red * 255) / 31;
-    bufferPtr[i + 1] = (color.ch.green * 255) / 63;
-    bufferPtr[i + 2] = (color.ch.blue * 255) / 31;
+    bufferPtr[i]      = (color.ch.blue * 255) / 31;
+    bufferPtr[i + 1]  = (color.ch.green * 255) / 63;
+    bufferPtr[i + 2]  = (color.ch.red * 255) / 31;
   }
-  
-  // Return the snapshot binary to the caller
-  res.set("Content-Type", "application/octet-stream");
+
+  // build header for .bmp file
+  struct bmpHeader_t
+  {
+    uint8_t  magic [2]        = {'B', 'M'};
+    uint32_t bfSize           = (uint32_t)(WT32_SCREEN_WIDTH * WT32_SCREEN_HEIGHT * 3);
+    uint32_t bfReserved       = 0;
+    uint32_t bfOffBits        = sizeof(bmpHeader_t);
+
+    uint32_t biSize           = 40;
+    int32_t biWidth           = WT32_SCREEN_WIDTH;
+    int32_t biHeight          = -WT32_SCREEN_HEIGHT;
+    uint16_t biPlanes         = 1;
+    uint16_t biBitCount       = 24;
+    uint32_t biCompression    = 0;
+    uint32_t biSizeImage      = bfSize;
+    int32_t biXPelsPerMeter   = 2836;
+    int32_t biYPelsPerMeter   = 2836;
+    uint32_t biClrUsed        = 0;
+    uint32_t biClrImportant   = 0;
+
+    uint32_t bdMask[3]        = {0x0, 0x0, 0x0};
+  } __attribute__((packed)) bmpHeader;
+
+  // Return the snapshot image to the caller
+  res.set("Content-Type", "image/bmp");
+  res.write((uint8_t *)&bmpHeader, sizeof(bmpHeader));
   res.write(bufferPtr, bufferSize);
+
+  // free used memory
+  lv_snapshot_free(snapshot);
 }
 #endif
 
@@ -554,7 +573,7 @@ void OXRS_WT32::_initialiseRestApi(void)
   
 #if defined(LV_USE_SNAPSHOT)
   // Custom endpoint for downloading a snapshot of the WT32 display
-  _api.get("/snapshot.bin", &_getApiSnapshot);
+  _api.get("/snapshot.bmp", &_getApiSnapshot);
 #endif
 
   // Start listening
