@@ -230,8 +230,15 @@ void _getApiSnapshot(Request &req, Response &res)
 
   // Return the snapshot image to the caller
   res.set("Content-Type", "image/bmp");
-  res.write((uint8_t *)&bmpHeader, sizeof(bmpHeader));
-  res.write(bufferPtr, bufferSize);
+  // supporting both types of write increase connectivety / download speeds
+  // ethernet only works on writeP due to buffer limits
+  #if defined(ETH_MODE)
+    res.writeP((uint8_t *)&bmpHeader, sizeof(bmpHeader));
+    res.writeP(bufferPtr, bufferSize);
+  #elif defined(WIFI_MODE)
+    res.write((uint8_t *)&bmpHeader, sizeof(bmpHeader));
+    res.write(bufferPtr, bufferSize);
+  #endif
 
   // free used memory
   lv_snapshot_free(snapshot);
