@@ -196,7 +196,7 @@ void _getApiSnapshot(Request &req, Response &res)
 
   // Take a snapshot
   lv_img_dsc_t *snapshot = lv_snapshot_take(lv_scr_act(), LV_IMG_CF_TRUE_COLOR_ALPHA);
-  uint8_t * bufferPtr = (uint8_t *)snapshot->data;
+  uint8_t *bufferPtr = (uint8_t *)snapshot->data;
   size_t bufferSize = WT32_SCREEN_WIDTH * WT32_SCREEN_HEIGHT * 3;
 
   // Convert to RGB888
@@ -204,12 +204,12 @@ void _getApiSnapshot(Request &req, Response &res)
   for (int i = 0; i < bufferSize; i += 3)
   {
     color.full = bufferPtr[i] + bufferPtr[i + 1] * 0x100;
-    bufferPtr[i]      = (color.ch.blue * 255) / 31;
-    bufferPtr[i + 1]  = (color.ch.green * 255) / 63;
-    bufferPtr[i + 2]  = (color.ch.red * 255) / 31;
+    bufferPtr[i] = (color.ch.blue * 255) / 31;
+    bufferPtr[i + 1] = (color.ch.green * 255) / 63;
+    bufferPtr[i + 2] = (color.ch.red * 255) / 31;
   }
 
-  // build header for .bmp file
+  // build header for .bmp file (full screen)
   struct bmpHeader_t
   {
     uint8_t magic[2] = {'B', 'M'};
@@ -232,22 +232,21 @@ void _getApiSnapshot(Request &req, Response &res)
     uint32_t bdMask[3] = {0x0, 0x0, 0x0};
   } __attribute__((packed)) bmpHeader;
 
+  // preset for full screen
+  int rowStart = 0;
+  int colStart = 0;
+  int rows = WT32_SCREEN_HEIGHT;
+  int cols = WT32_SCREEN_WIDTH;
+
   // handle one tile only request
-  if ((tileIdx > 0) && (tileIdx < 7))
+  if ((tileIdx >= 1) && (tileIdx <= 6))
   {
-    int rowStart;
-    int colStart;
-    int rows = 139;
-    int cols = 148;
-    switch (tileIdx)
-    {
-      case 1 : rowStart = 5; colStart = 7; break;
-      case 2 : rowStart = 5; colStart = 165; break;
-      case 3 : rowStart = 154; colStart = 7; break;
-      case 4 : rowStart = 154; colStart = 165; break;
-      case 5 : rowStart = 303; colStart = 7; break;
-      case 6 : rowStart = 303; colStart = 165; break;
-    }
+    rows = 139;
+    cols = 148;
+    tileIdx--;
+    int rowColStarts[6][2] = {{5, 7},  {5, 165},  {154, 7},  {154, 165},  {303, 7},  {303, 165}};
+    rowStart = rowColStarts[tileIdx][0];
+    colStart = rowColStarts[tileIdx][1];
     uint32_t size = rows * cols * 3;
 
     // update header with recent values for tile only mode
@@ -255,23 +254,17 @@ void _getApiSnapshot(Request &req, Response &res)
     bmpHeader.biSizeImage = bmpHeader.bfSize;
     bmpHeader.biWidth = cols;
     bmpHeader.biHeight = -rows;
+  }
 
-    // Return the snapshot image to the caller
-    res.set("Content-Type", "image/bmp");
-    res.write((uint8_t *)&bmpHeader, sizeof(bmpHeader));
-    for (bufferPtr += (rowStart * WT32_SCREEN_WIDTH * 3 + colStart * 3); rows > 0; bufferPtr += (WT32_SCREEN_WIDTH * 3), rows--)
-    {
-      res.write(bufferPtr, cols * 3);
-    }
-  }
-  // handle full screen snapshot
-  else
+  // Return the snapshot image to the caller
+  // send bmp data row by row to limit buffersize
+  res.set("Content-Type", "image/bmp");
+  res.write((uint8_t *)&bmpHeader, sizeof(bmpHeader));
+  for (bufferPtr += (rowStart * WT32_SCREEN_WIDTH * 3 + colStart * 3); rows > 0; bufferPtr += (WT32_SCREEN_WIDTH * 3), rows--)
   {
-    // Return the snapshot image to the caller
-    res.set("Content-Type", "image/bmp");
-    res.write((uint8_t *)&bmpHeader, sizeof(bmpHeader));
-    res.write(bufferPtr, bufferSize);
+    res.write(bufferPtr, cols * 3);
   }
+
   // free used memory
   lv_snapshot_free(snapshot);
 }
